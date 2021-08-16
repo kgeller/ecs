@@ -6,11 +6,23 @@
     URL fields provide support for complete or partial URLs, and supports the
     breaking down into scheme, domain, path, and so on.
   type: group
+  reusable:
+    top_level: true
+    expected:
+      - at: threat.indicator
+        as: url
+        beta: Reusing the `url` fields in this location is currently considered beta.
+      - at: threat.enrichments.indicator
+        as: url
+        beta: Reusing the `url` fields in this location is currently considered beta.
   fields:
 
     - name: original
       level: extended
-      type: keyword
+      type: wildcard
+      beta: >
+        Use of `wildcard` as the primary type and `match_only_type` as
+        the `.text` multi-field type are both currently beta.
       short: Unmodified original url as seen in the event source.
       description: >
         Unmodified original url as seen in the event source.
@@ -23,12 +35,15 @@
       example: >
         https://www.elastic.co:443/search?q=elasticsearch#top or /search?q=elasticsearch
       multi_fields:
-      - type: text
+      - type: match_only_text
         name: text
 
     - name: full
       level: extended
-      type: keyword
+      type: wildcard
+      beta: >
+        Use of `wildcard` as the primary type and `match_only_type` as
+        the `.text` multi-field type are both currently beta
       short: Full unparsed URL.
       description: >
         If full URLs are important to your use case, they should be stored in
@@ -36,7 +51,7 @@
         event source.
       example: https://www.elastic.co:443/search?q=elasticsearch#top
       multi_fields:
-      - type: text
+      - type: match_only_text
         name: text
 
     - name: scheme
@@ -116,7 +131,8 @@
 
     - name: path
       level: extended
-      type: keyword
+      type: wildcard
+      beta: Use of the `wildcard` data type for this field is currently beta.
       description: >
         Path of the request, such as "/search".
 

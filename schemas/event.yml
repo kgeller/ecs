@@ -17,6 +17,7 @@
     See the `event.kind` definition in this section for additional details about
     metric and state events.
   type: group
+
   fields:
 
     - name: id
@@ -58,11 +59,23 @@
       allowed_values:
         - name: alert
           description: >
-            This value indicates an event that describes an alert or notable event,
-            triggered by a detection rule.
+            This value indicates an event such as an alert or notable event,
+            triggered by a detection rule executing externally to the Elastic Stack.
 
             `event.kind:alert` is often populated for events coming from firewalls,
             intrusion detection systems, endpoint detection and response systems, and so on.
+            
+            This value is not used by Elastic solutions for alert documents
+            that are created by rules executing within the Kibana alerting framework.
+        - name: enrichment
+          description: >
+            The `enrichment` value indicates an event collected to provide additional
+            context, often to other events.
+
+            An example is collecting indicators of compromise (IOCs) from a threat
+            intelligence provider with the intent to use those values to enrich other
+            events. The IOC events from the intelligence provider should be categorized
+            as `event.kind:enrichment`.
         - name: event
           description: >
             This value is the most general and most common value for this field.
@@ -103,13 +116,10 @@
             `event.kind:pipeline_error` is often associated with parsing errors.
         - name: signal
           description: >
-            This value is used by the Elastic Security app to denote an Elasticsearch
-            document that was created by a SIEM detection engine rule.
+            This value is used by Elastic solutions (e.g., Security, Observability) for alert documents
+            that are created by rules executing within the Kibana alerting framework.
 
-            A signal will typically trigger a notification that something
-            meaningful happened and should be investigated.
-
-            Usage of this value is reserved, and pipelines should not populate
+            Usage of this value is reserved, and data ingestion pipelines must not populate
             `event.kind` with the value "signal".
 
     - name: category
@@ -295,6 +305,11 @@
             - start
             - end
             - info
+        - name: threat
+          description: >
+            Use this category to visualize and analyze events describing threat actors' targets, motives, or behaviors.
+          expected_event_types:
+            - indicator
         - name: web
           description: >
             Relating to web server access. Use this category to create a dashboard of
@@ -474,6 +489,12 @@
             Common example: `event.category:iam AND event.type:creation AND event.type:group`.
             You can further distinguish group operations using the ECS
             `event.action` field.
+        - name: indicator
+          description: >
+            The indicator event type is used for the subset of events within a category
+            that contain details about indicators of compromise (IOCs).
+
+            A common example is `event.category:threat AND event.type:indicator`.
         - name: info
           description: >
             The info event type is used for the subset of events within a category
@@ -587,12 +608,14 @@
           dst=2.1.2.2spt=1232"
       short: Raw text message of entire event.
       description: >
-          Raw text message of entire event. Used to demonstrate log integrity.
+          Raw text message of entire event. Used to demonstrate log integrity
+          or where the full log message (before splitting it up in multiple
+          parts) may be required, e.g. for reindex.
 
           This field is not indexed and doc_values are disabled. It cannot be
           searched, but it can be retrieved from `_source`. If users wish to
-          override this and index this field, consider using the wildcard
-          data type.
+          override this and index this field, please see `Field data types`
+          in the `Elasticsearch Reference`.
       index: false
       doc_values: false
 
@@ -744,3 +767,35 @@
         was taken. For example, a web proxy with an `event.action` which denied the request may also
         populate `event.reason` with the reason why (e.g. `blocked site`).
       example: "Terminated an unexpected process"
+
+    - name: agent_id_status
+      level: extended
+      type: keyword
+      short: Validation status of the event's agent.id field.
+      description: >
+        Agents are normally responsible for populating the `agent.id` field value.
+        If the system receiving events is capable of validating the value based
+        on authentication information for the client then this field can be used
+        to reflect the outcome of that validation.
+
+        For example if the agent's connection is authenticated with mTLS and
+        the client cert contains the ID of the agent to which the cert was issued
+        then the `agent.id` value in events can be checked against the certificate.
+        If the values match then `event.agent_id_status: verified` is added to
+        the event, otherwise one of the other allowed values should be used.
+
+        If no validation is performed then the field should be omitted.
+
+        The allowed values are:
+
+        `verified` - The `agent.id` field value matches expected value obtained
+        from auth metadata.
+
+        `mismatch` - The `agent.id` field value does not match the expected
+        value obtained from auth metadata.
+
+        `missing` - There was no `agent.id` field in the event to validate.
+
+        `auth_metadata_missing` - There was no auth metadata or it was missing
+        information about the agent ID.
+      example: verified

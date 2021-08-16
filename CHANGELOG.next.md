@@ -8,38 +8,31 @@ Thanks, you're awesome :-) -->
 
 ## Unreleased
 
-### Breaking Changes
-
 ### Schema Changes
-
-#### Bugfixes
 
 #### Added
 
-* `elf.*` field set added as beta. #1410
-* Remove `beta` from `orchestrator` field set. #1417
-* Extend `threat.*` field set beta. #1438
-
-#### Improvements
-
-* Fix ecs GitHub repo link source branch #1393
-* Add --exclude flag to Generator to support field removal testing #1411
-* Explicitly include user identifiers in `relater.user` description. #1420
-
-#### Deprecated
-
-* Note deprecation of the `host.user.*` field reuse. #1422
+* Added `service.address` field. #1537
+* Promote `threat.software.*` and `threat.group.*` fields to GA. #1540
+* Added `service.environment` as a beta field. #1541
+* Added `process.end` field. #1544
+* Introduce container metric fields into experimental schema. #1546
 
 ### Tooling and Artifact Changes
 
+#### Breaking changes
+
 #### Bugfixes
 
 #### Added
 
-* Support `match_only_text` data type in Go code generator. #1418
+* Added `file.fork_name` field. #1288
+* Beta migration on some `keyword` fields to `wildcard`. #1517
+* Support ES 6.x type fallback for `match_only_text` field types. #1528
 
 #### Improvements
 
+* Beta migration of `text` and `.text` multi-fields to `match_only_text`. #1532
 #### Deprecated
 
 <!-- All empty sections:

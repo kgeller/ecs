@@ -91,6 +91,8 @@ def sort_fields(fieldset):
     """
     fields_list = list(fieldset['fields'].values())
     for field in fields_list:
+        if 'is_reuse' in field and field['is_reuse']:
+            continue
         field['allowed_value_names'] = extract_allowed_values_key_names(field)
     return sorted(fields_list, key=lambda field: field['name'])
 

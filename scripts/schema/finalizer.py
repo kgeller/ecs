@@ -72,6 +72,13 @@ def perform_reuse(fields):
     for order in sorted(foreign_reuses.keys()):
         for schema_name, reuse_entries in foreign_reuses[order].items():
             schema = fields[schema_name]
+            reused_fields = copy.deepcopy(schema['fields'])
+                        
+            # remove re-use nested object field from fields list for re-use TODO check if needed
+            for field, field_value in schema['fields'].items():
+                if 'is_reuse' in field_value['field_details']:
+                    reused_fields.pop(field)
+            
             for reuse_entry in reuse_entries:
                 # print(order, "{} => {}".format(schema_name, reuse_entry['full']))
                 nest_as = reuse_entry['as']
@@ -80,10 +87,23 @@ def perform_reuse(fields):
                 ensure_valid_reuse(schema, destination_schema)
 
                 new_field_details = copy.deepcopy(schema['field_details'])
+
                 new_field_details['name'] = nest_as
+                new_field_details['node_name'] = nest_as
                 new_field_details['original_fieldset'] = schema_name
-                new_field_details['intermediate'] = True
-                reused_fields = copy.deepcopy(schema['fields'])
+                new_field_details['intermediate'] = False
+                new_field_details['is_reuse'] = True
+
+                print(reuse_entry)
+                print(destination_schema_name)
+                print(nest_as)
+                
+                #print(schema['fields'])
+                original_field_details = schema['fields'][nest_as]['field_details']
+                new_field_details['type'] = original_field_details['type']
+                new_field_details['normalize'] = original_field_details['normalize'] if 'normalize' in original_field_details else []
+                new_field_details['level'] = original_field_details['level'] if 'level' in original_field_details else 'extended'
+
                 set_original_fieldset(reused_fields, schema_name)
                 destination_fields = field_group_at_path(reuse_entry['at'], fields)
                 destination_fields[nest_as] = {
@@ -98,14 +118,29 @@ def perform_reuse(fields):
         ensure_valid_reuse(schema)
         # Since we're about self-nest more fields within these, make a pristine copy first
         reused_fields = copy.deepcopy(schema['fields'])
+
+        # remove re-use nested object field from fields list for re-use
+        for field, field_value in schema['fields'].items():
+                if 'is_reuse' in field_value['field_details']:
+                    reused_fields.pop(field)
+
         set_original_fieldset(reused_fields, schema_name)
         for reuse_entry in reuse_entries:
             # print("x {} => {}".format(schema_name, reuse_entry['full']))
             nest_as = reuse_entry['as']
             new_field_details = copy.deepcopy(schema['field_details'])
+            
             new_field_details['name'] = nest_as
+            new_field_details['node_name'] = nest_as
             new_field_details['original_fieldset'] = schema_name
-            new_field_details['intermediate'] = True
+            new_field_details['intermediate'] = False
+            new_field_details['is_reuse'] = True
+
+            original_field_details = schema['fields'][nest_as]['field_details']
+            new_field_details['type'] = original_field_details['type']
+            new_field_details['normalize'] = original_field_details['normalize'] if 'normalize' in original_field_details and 'array' in original_field_details['normalize'] else []
+            new_field_details['level'] = original_field_details['level']
+
             # to handle multi-level self-nesting
             if reuse_entry['at'] != schema_name:
                 destination_fields = field_group_at_path(reuse_entry['at'], fields)

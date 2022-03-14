@@ -149,15 +149,35 @@ def deep_nesting_representation(fields):
 
         # Add in nested field for array re-uses
         if 'reusable' in flat_schema:
+            default_description = flat_schema['short'] if 'short' in flat_schema else flat_schema['description']
             for reuse in flat_schema['reusable']['expected']:
+
+                reuse_object = {
+                    'description': reuse['short_override'] if 'short_override' in reuse else default_description,
+                    'type': 'object',
+                    'level': 'extended',
+                    'is_reuse': True
+                }
+
+                if 'at' in reuse and 'as' in reuse:
+                    if '.' in reuse['at']:
+                        reuse_object['name'] = '.'.join(reuse['at'].split('.')[1:]) + ".{}".format(reuse['as'])
+                    else:
+                        reuse_object['name'] = reuse['as']
+                else:
+                    reuse_object['name'] = flat_schema['name']
+
                 if 'normalize' in reuse and 'array' in reuse['normalize']:
-                    flat_schema['fields'].append({
-                        'name': reuse['as'],
-                        'description': reuse['short_override'] if 'short_override' in reuse else flat_schema['short'],
-                        'type': 'nested',
-                        'level': 'extended',
-                        'normalize': ['array']
-                    })
+                    reuse_object['normalize'] = ['array']
+
+                if type(reuse) is str or 'as' in reuse and reuse['as'] == flat_schema['name']:
+                    reuse_object['intermediate'] = True
+                
+                if 'at' in reuse and reuse['at'] != flat_schema['name']:
+                    destination_schema_name = reuse['at'].split('.')[0]  
+                    fields[destination_schema_name]['fields'].append(reuse_object)
+                else:
+                    flat_schema['fields'].append(reuse_object)
 
         # Schema-only details. Not present on other nested field groups.
         schema_details = {}

@@ -1,0 +1,9 @@
+,,
+,"Check out how to use Kibana (https://www.elastic.co/guide/en/ecs/current/ecs-converting.html) to generate Elasticsearch
+pipelines from your mapping CSV exports to help you get started mapping to Elastic Common Schema (ECS),",
+,,"1. Make a copy of this spreadsheet to your Google Docs account, or export to Excel"
+,,"2. Duplicate the ""Template"" sheet for every event source you would like to migrate"
+,,3. Start mapping how your event source will need to be adjusted in order to map to ECS
+,,"4. Export the ""Template"" sheet(s) as CSV to use in Kibana"
+,,
+,"Note: add as many columns as you need, but do not change the columns source_field, destination_field, copy_action or format_action.",
